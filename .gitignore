@@ -23,3 +23,9 @@ Thumbs.db
 
 # build info
 tsconfig.tsbuildinfo
+
+# LLM Stack
+logs/cost-tracking.jsonl
+litellm_postgres_data/
+litellm_redis_data/
+tests/.tmp/
