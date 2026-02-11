@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "id": "577c98a6-c868-4115-aa61-eb70dc2de465",
+  "timestamp": "2026-02-10T02:13:01.527Z",
+  "files": [
+    {
+      "path": "vercel.json",
+      "conversations": [
+        {
+          "contributor_type": "ai",
+          "model": "anthropic/claude-opus-4-5-20251101",
+          "ranges": [
+            {
+              "start_line": 1,
+              "end_line": -1
+            }
+          ],
+          "description": "Write: file creation/overwrite"
+        }
+      ]
+    }
+  ],
+  "tool": {
+    "name": "taisun-agent",
+    "version": "2.10.1"
+  },
+  "metadata": {
+    "dev.taisun": {
+      "hook": "agent-trace-capture",
+      "tool_used": "Write"
+    }
+  }
+}

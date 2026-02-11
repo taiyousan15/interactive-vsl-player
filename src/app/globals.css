@@ -1,0 +1,178 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050510;
+  --foreground: #e0e8ff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glitch-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-5px) skewX(-2deg);
+    filter: hue-rotate(90deg);
+  }
+  30% {
+    opacity: 0.7;
+    transform: translateX(3px) skewX(1deg);
+    filter: hue-rotate(0deg);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translateX(-2px) skewX(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes particle-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out forwards;
+}
+
+.animate-zoom-in {
+  animation: zoom-in 0.8s ease-out forwards;
+}
+
+.animate-glitch-in {
+  animation: glitch-in 0.6s ease-out forwards;
+}
+
+.animate-particle-in {
+  animation: particle-in 1s ease-out forwards;
+}
+
+/* Ken Burns effect for scene background images */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  100% {
+    transform: scale(1.08) translate(-1%, -1%);
+  }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 30s ease-in-out alternate infinite;
+}
+
+/* Telop semi-transparent background */
+.telop-bg {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 0.75rem;
+  padding: 1rem 1.5rem;
+  max-width: 90%;
+}
+
+/* Telop text styling */
+.telop-text {
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+
+.telop-emphasis {
+  color: #FFD700;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes telop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes telop-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05) translateY(-10px);
+  }
+}
+
+.animate-telop-in {
+  animation: telop-in 0.4s ease-out forwards;
+}
+
+.animate-telop-out {
+  animation: telop-out 0.3s ease-in forwards;
+}

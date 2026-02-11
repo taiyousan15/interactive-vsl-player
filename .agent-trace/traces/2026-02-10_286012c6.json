@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "id": "286012c6-9fbd-4b91-8d62-d23f326b896e",
+  "timestamp": "2026-02-10T12:57:01.821Z",
+  "files": [
+    {
+      "path": "scripts/generate-audio.py",
+      "conversations": [
+        {
+          "contributor_type": "ai",
+          "model": "anthropic/claude-opus-4-5-20251101",
+          "ranges": [
+            {
+              "start_line": 1,
+              "end_line": -1
+            }
+          ],
+          "description": "Write: file creation/overwrite"
+        }
+      ]
+    }
+  ],
+  "tool": {
+    "name": "taisun-agent",
+    "version": "2.10.1"
+  },
+  "metadata": {
+    "dev.taisun": {
+      "hook": "agent-trace-capture",
+      "tool_used": "Write"
+    }
+  }
+}

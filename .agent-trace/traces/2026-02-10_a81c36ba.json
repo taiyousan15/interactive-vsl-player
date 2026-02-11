@@ -1,0 +1,33 @@
+{
+  "version": "0.1.0",
+  "id": "a81c36ba-a4fc-4cf8-a31c-59c9abd76a14",
+  "timestamp": "2026-02-10T11:29:53.491Z",
+  "files": [
+    {
+      "path": "src/components/SceneRenderer.tsx",
+      "conversations": [
+        {
+          "contributor_type": "ai",
+          "model": "anthropic/claude-opus-4-5-20251101",
+          "ranges": [
+            {
+              "start_line": 1,
+              "end_line": -1
+            }
+          ],
+          "description": "Edit: text replacement"
+        }
+      ]
+    }
+  ],
+  "tool": {
+    "name": "taisun-agent",
+    "version": "2.10.1"
+  },
+  "metadata": {
+    "dev.taisun": {
+      "hook": "agent-trace-capture",
+      "tool_used": "Edit"
+    }
+  }
+}
