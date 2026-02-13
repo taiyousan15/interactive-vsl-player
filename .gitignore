@@ -29,3 +29,7 @@ logs/cost-tracking.jsonl
 litellm_postgres_data/
 litellm_redis_data/
 tests/.tmp/
+
+# Workflow temp files
+.agent_usage_state.json
+.workflow_state.json
