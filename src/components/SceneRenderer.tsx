@@ -158,7 +158,7 @@ export function SceneRenderer({
     const count = scene.imageCount ?? 3
     for (let i = 1; i <= count; i++) {
       const img = new Image()
-      img.src = `/images/scenes/${scene.id}_0${i}.png`
+      img.src = `/images/scenes/${scene.id}_${String(i).padStart(2, '0')}.png`
     }
 
     // Preload next scene's audio for gapless transitions
@@ -267,7 +267,7 @@ export function SceneRenderer({
   }, [isPlaying, scene.duration, scene.id, onSceneEnd])
 
   const animationClass = getAnimationClass(scene.style.animation)
-  const imagePath = `/images/scenes/${scene.id}_0${currentImageIndex + 1}.png`
+  const imagePath = `/images/scenes/${scene.id}_${String(currentImageIndex + 1).padStart(2, '0')}.png`
   const currentSegment = narrationSegments[currentSegmentIndex]
 
   // BudouX phrase-level splitting for natural line wrapping
