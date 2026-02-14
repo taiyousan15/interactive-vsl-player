@@ -98,7 +98,7 @@ const commonScenes: readonly Scene[] = [
     imageInterval: 3000,
     nextSceneId: "s02-son",
     style: hookStyle,
-    mediaType: "video",
+    mediaType: "image",
     keyPhrases: [
       { text: "速報", emphasis: true, startTime: 0 },
       { text: "AIが人間を超えた", startTime: 3 },
@@ -370,7 +370,7 @@ const branchBScenes: readonly Scene[] = [
     imageInterval: 3000,
     nextSceneId: "s07b-05percent",
     style: fearStyle,
-    mediaType: "video",
+    mediaType: "image",
     keyPhrases: [
       { text: "ビジネスは\nさらに上へ", startTime: 0 },
       { text: "全ジャンルに\n浸透していく", startTime: 5 },
