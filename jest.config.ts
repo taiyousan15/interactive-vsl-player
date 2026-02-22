@@ -3,8 +3,9 @@ import type { Config } from 'jest'
 const config: Config = {
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: './tsconfig.test.json' }],
   },
