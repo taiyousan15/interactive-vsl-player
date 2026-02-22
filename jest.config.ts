@@ -16,6 +16,8 @@ const config: Config = {
     'src/data/interactive-elements.ts',
     'src/hooks/useInteractiveElements.ts',
     'src/hooks/useAnalytics.ts',
+    'src/hooks/useAISuggestions.ts',
+    'src/services/ai-interactive.ts',
     '!src/performance/index.ts',
   ],
   coverageThreshold: {
