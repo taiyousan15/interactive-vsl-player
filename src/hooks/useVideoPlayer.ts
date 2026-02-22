@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from "react"
 import type { Scene, BranchScene, ChoiceId, AnalyticsEvent } from "@/types/video"
-import { branchStructure, getSceneById, getNextScene } from "@/data/branch-structure"
+import { branchStructure, getSceneById, getNextScene } from "@/data/branch-structure-4dpocket"
 
 interface VideoPlayerState {
   readonly currentScene: Scene | BranchScene
