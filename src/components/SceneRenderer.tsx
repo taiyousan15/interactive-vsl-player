@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { Parser, jaModel } from "budoux"
 import type { Scene, BranchScene } from "@/types/video"
+import type { Hotspot, Overlay } from "@/types/interactive"
+import { HotspotLayer } from "@/components/HotspotLayer"
+import { OverlayPanel } from "@/components/OverlayPanel"
 
 const budouxParser = new Parser(jaModel)
 
@@ -13,8 +16,7 @@ interface NarrationSegment {
 
 /**
  * Split narration text into timed segments using BudouX phrase boundaries.
- * No explicit \n — line wrapping is handled by CSS + BudouX phrase-level spans.
- * Segments are ~26 chars each (roughly 2 visual lines on mobile).
+ * Segments are ~22 chars each for the bar-style telop.
  */
 function splitNarrationIntoSegments(
   narration: string,
@@ -27,7 +29,7 @@ function splitNarrationIntoSegments(
     .filter((s) => s.trim())
 
   const segments: string[] = []
-  const maxSegmentChars = 26
+  const maxSegmentChars = 22
 
   for (const sentence of sentences) {
     const phrases = budouxParser.parse(sentence.trim())
@@ -58,16 +60,52 @@ function splitNarrationIntoSegments(
   })
 }
 
+/**
+ * Determine telop bar color based on scene type.
+ * Red for hook/cta/problem, blue for solution/benefit/proof, gold for bonus.
+ */
+function getTelopBarClass(sceneType: string): string {
+  switch (sceneType) {
+    case "intro":
+    case "cta":
+    case "problem":
+    case "fear":
+      return "telop-bar--red"
+    case "solution":
+    case "benefit":
+    case "proof":
+    case "testimonial":
+    case "product":
+      return "telop-bar--blue"
+    default:
+      return "telop-bar--red"
+  }
+}
+
 interface SceneRendererProps {
   readonly scene: Scene | BranchScene
   readonly isPlaying: boolean
   readonly onSceneEnd: () => void
+  readonly hotspots?: readonly Hotspot[]
+  readonly overlays?: readonly Overlay[]
+  readonly activeOverlayId?: string | null
+  readonly onHotspotClick?: (hotspot: Hotspot) => void
+  readonly onOverlayDismiss?: (overlayId: string) => void
+  readonly onOverlayCtaClick?: (overlay: Overlay) => void
+  readonly onTimeUpdate?: (currentTime: number) => void
 }
 
 export function SceneRenderer({
   scene,
   isPlaying,
   onSceneEnd,
+  hotspots,
+  overlays,
+  activeOverlayId,
+  onHotspotClick,
+  onOverlayDismiss,
+  onOverlayCtaClick,
+  onTimeUpdate,
 }: SceneRendererProps) {
   const [progress, setProgress] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
@@ -81,6 +119,7 @@ export function SceneRenderer({
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const lastInteractiveUpdateRef = useRef(0)
 
   const imageCount = scene.imageCount ?? 3
   const imageInterval = scene.imageInterval ?? 3000
@@ -108,6 +147,12 @@ export function SceneRenderer({
     const pct = (audio.currentTime / audio.duration) * 100
     setProgress(pct)
 
+    const now = Date.now()
+    if (onTimeUpdate && now - lastInteractiveUpdateRef.current >= 100) {
+      lastInteractiveUpdateRef.current = now
+      onTimeUpdate(audio.currentTime)
+    }
+
     if (narrationSegments.length === 0) return
     const currentTime = audio.currentTime
     let idx = -1
@@ -122,9 +167,9 @@ export function SceneRenderer({
       setTimeout(() => {
         setCurrentSegmentIndex(idx)
         setSegmentAnimation("in")
-      }, 250)
+      }, 200)
     }
-  }, [narrationSegments, currentSegmentIndex])
+  }, [narrationSegments, currentSegmentIndex, onTimeUpdate])
 
   // Reset state and load audio when scene changes
   useEffect(() => {
@@ -154,11 +199,13 @@ export function SceneRenderer({
       audio.load()
     }
 
-    // Preload all images for smooth cycling (used by image scenes and video fallback)
-    const count = scene.imageCount ?? 3
-    for (let i = 1; i <= count; i++) {
-      const img = new Image()
-      img.src = `/images/scenes/${scene.id}_${String(i).padStart(2, '0')}.png`
+    // Preload all images for smooth cycling (skip for video scenes)
+    if (scene.mediaType !== "video") {
+      const count = scene.imageCount ?? 3
+      for (let i = 1; i <= count; i++) {
+        const img = new Image()
+        img.src = `/images/scenes/${scene.id}_${String(i).padStart(2, '0')}.png`
+      }
     }
 
     // Preload next scene's audio for gapless transitions
@@ -172,7 +219,7 @@ export function SceneRenderer({
     return () => clearTimeout(fadeTimer)
   }, [scene.id, scene.nextSceneId])
 
-  // Multi-image cycling: rotate every 3 seconds with crossfade (image scenes only)
+  // Multi-image cycling with crossfade
   useEffect(() => {
     if (useVideo) return
     if (!isPlaying) {
@@ -206,7 +253,6 @@ export function SceneRenderer({
 
     if (isPlaying) {
       video.play().catch(() => {
-        // Video play failed, fall back to images
         setVideoFailed(true)
       })
     } else {
@@ -214,7 +260,7 @@ export function SceneRenderer({
     }
   }, [isPlaying, useVideo])
 
-  // Audio play/pause with FIXED single fallback timer
+  // Audio play/pause with fallback timer
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -228,7 +274,6 @@ export function SceneRenderer({
       return
     }
 
-    // Clear any existing fallback timer before setting a new one
     if (fallbackTimerRef.current) {
       clearTimeout(fallbackTimerRef.current)
       fallbackTimerRef.current = null
@@ -237,7 +282,6 @@ export function SceneRenderer({
     audio
       .play()
       .then(() => {
-        // Play succeeded: set a generous fallback in case onEnded doesn't fire
         fallbackTimerRef.current = setTimeout(() => {
           if (!hasEndedRef.current) {
             hasEndedRef.current = true
@@ -247,7 +291,6 @@ export function SceneRenderer({
         }, (scene.duration + 5) * 1000)
       })
       .catch(() => {
-        // Play failed (e.g. autoplay blocked): use duration-based fallback
         if (hasEndedRef.current) return
         fallbackTimerRef.current = setTimeout(() => {
           if (!hasEndedRef.current) {
@@ -269,6 +312,7 @@ export function SceneRenderer({
   const animationClass = getAnimationClass(scene.style.animation)
   const imagePath = `/images/scenes/${scene.id}_${String(currentImageIndex + 1).padStart(2, '0')}.png`
   const currentSegment = narrationSegments[currentSegmentIndex]
+  const telopBarClass = getTelopBarClass(scene.type)
 
   // BudouX phrase-level splitting for natural line wrapping
   const segmentPhrases = useMemo(
@@ -290,13 +334,13 @@ export function SceneRenderer({
         onTimeUpdate={handleTimeUpdate}
       />
 
-      {/* Video or Image background based on mediaType */}
+      {/* Video or Image background */}
       {useVideo ? (
         <video
           ref={videoRef}
           src={`/video/scenes/${scene.id}.mp4`}
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ opacity: 0.65 }}
+          style={{ opacity: 0.92 }}
           muted
           playsInline
           loop
@@ -309,7 +353,7 @@ export function SceneRenderer({
           alt=""
           className="animate-ken-burns absolute inset-0 h-full w-full object-cover"
           style={{
-            opacity: imageFading ? 0 : 0.65,
+            opacity: imageFading ? 0 : 0.92,
             transition: "opacity 500ms ease-in-out",
           }}
           onError={(e) => {
@@ -324,10 +368,26 @@ export function SceneRenderer({
       )}
 
       {/* Gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
 
-      {scene.style.overlay === "manga-lines" && <MangaLinesOverlay />}
-      {scene.style.overlay === "cyber-grid" && <CyberGridOverlay />}
+      {/* Clay texture overlay */}
+      {scene.style.overlay === "clay-texture" && <ClayTextureOverlay />}
+
+      {/* Interactive: Hotspots */}
+      {hotspots && hotspots.length > 0 && onHotspotClick && (
+        <HotspotLayer hotspots={hotspots} onHotspotClick={onHotspotClick} />
+      )}
+
+      {/* Interactive: Overlays */}
+      {overlays?.map((overlay) => (
+        <OverlayPanel
+          key={overlay.id}
+          overlay={overlay}
+          isActive={activeOverlayId === overlay.id || overlays.length > 0}
+          onDismiss={onOverlayDismiss ?? (() => {})}
+          onCtaClick={onOverlayCtaClick}
+        />
+      ))}
 
       {/* Scene type label */}
       <div className={`z-10 flex flex-col items-center gap-4 ${animationClass}`}>
@@ -339,20 +399,22 @@ export function SceneRenderer({
         </div>
       </div>
 
-      {/* Telop: BudouX phrase-aware narration segments */}
+      {/* Telop: 赤/青帯 + 白文字 + 黒アウトライン - 中央配置 */}
       {currentSegment && (
         <div
-          className={`absolute inset-0 z-10 flex items-center justify-center px-4 ${
+          className={`absolute bottom-20 left-0 right-0 z-10 ${
             segmentAnimation === "in" ? "animate-telop-in" : "animate-telop-out"
           }`}
         >
-          <div className="telop-bg">
-            <div className="telop-text text-lg text-white md:text-xl">
-              {segmentPhrases.map((phrase, i) => (
-                <span key={i} style={{ display: "inline-block" }}>
-                  {phrase}
-                </span>
-              ))}
+          <div className="telop-container">
+            <div className={`telop-bar ${telopBarClass}`}>
+              <div className="telop-text">
+                {segmentPhrases.map((phrase, i) => (
+                  <span key={i} style={{ display: "inline-block" }}>
+                    {phrase}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -384,41 +446,9 @@ export function SceneRenderer({
   )
 }
 
-function MangaLinesOverlay() {
+function ClayTextureOverlay() {
   return (
-    <div className="pointer-events-none absolute inset-0 opacity-5">
-      <div
-        className="h-full w-full"
-        style={{
-          backgroundImage: `
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 3px,
-              rgba(255,255,255,0.1) 3px,
-              rgba(255,255,255,0.1) 4px
-            )
-          `,
-        }}
-      />
-    </div>
-  )
-}
-
-function CyberGridOverlay() {
-  return (
-    <div className="pointer-events-none absolute inset-0 opacity-10">
-      <div
-        className="h-full w-full"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,212,255,0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: "40px 40px",
-        }}
-      />
-    </div>
+    <div className="clay-texture-overlay pointer-events-none absolute inset-0 opacity-30" />
   )
 }
 
@@ -443,7 +473,7 @@ function getAnimationClass(
 
 function getSceneTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    intro: "INTRODUCTION",
+    intro: "BREAKING NEWS",
     problem: "PROBLEM",
     fear: "WARNING",
     solution: "SOLUTION",

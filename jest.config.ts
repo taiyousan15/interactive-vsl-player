@@ -1,13 +1,21 @@
 import type { Config } from 'jest'
 
 const config: Config = {
-  preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.ts'],
-  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: './tsconfig.test.json' }],
+  },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
   collectCoverageFrom: [
     'src/performance/**/*.ts',
+    'src/data/interactive-elements.ts',
+    'src/hooks/useInteractiveElements.ts',
+    'src/hooks/useAnalytics.ts',
     '!src/performance/index.ts',
   ],
   coverageThreshold: {

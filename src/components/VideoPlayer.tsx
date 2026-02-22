@@ -1,9 +1,13 @@
 "use client"
 
+import { useCallback } from "react"
 import { useVideoPlayer } from "@/hooks/useVideoPlayer"
+import { useInteractiveElements } from "@/hooks/useInteractiveElements"
+import { useAnalytics } from "@/hooks/useAnalytics"
 import { SceneRenderer } from "@/components/SceneRenderer"
 import { ChoiceOverlay } from "@/components/ChoiceOverlay"
 import type { BranchScene } from "@/types/video"
+import type { Hotspot, Overlay } from "@/types/interactive"
 
 export function VideoPlayer() {
   const {
@@ -18,16 +22,79 @@ export function VideoPlayer() {
     restart,
   } = useVideoPlayer()
 
+  const {
+    visibleHotspots,
+    visibleOverlays,
+    activeOverlayId,
+    updateVisibility,
+    openOverlay,
+    dismissOverlay,
+    resetForScene,
+  } = useInteractiveElements()
+
+  const { trackEvent } = useAnalytics()
+
+  const handleTimeUpdate = useCallback(
+    (currentTime: number) => {
+      updateVisibility(currentScene.id, currentTime)
+    },
+    [currentScene.id, updateVisibility]
+  )
+
+  const handleHotspotClick = useCallback(
+    (hotspot: Hotspot) => {
+      trackEvent("hotspot_click", currentScene.id, hotspot.id)
+
+      if (hotspot.action.type === "overlay" && hotspot.action.overlayId) {
+        openOverlay(currentScene.id, hotspot.action.overlayId)
+      } else if (hotspot.action.type === "url" && hotspot.action.url) {
+        window.open(hotspot.action.url, "_blank", "noopener,noreferrer")
+      }
+    },
+    [currentScene.id, trackEvent, openOverlay]
+  )
+
+  const handleOverlayDismiss = useCallback(
+    (overlayId: string) => {
+      trackEvent("overlay_dismiss", currentScene.id, overlayId)
+      dismissOverlay(overlayId)
+    },
+    [currentScene.id, trackEvent, dismissOverlay]
+  )
+
+  const handleOverlayCtaClick = useCallback(
+    (overlay: Overlay) => {
+      trackEvent("overlay_cta_click", currentScene.id, overlay.id)
+      if (overlay.content.ctaUrl) {
+        window.open(overlay.content.ctaUrl, "_blank", "noopener,noreferrer")
+      }
+    },
+    [currentScene.id, trackEvent]
+  )
+
+  const originalAdvanceScene = advanceScene
+  const handleAdvanceScene = useCallback(() => {
+    resetForScene(currentScene.id)
+    originalAdvanceScene()
+  }, [currentScene.id, resetForScene, originalAdvanceScene])
+
   const isBranchScene = currentScene.type === "choice"
   const branchScene = isBranchScene ? (currentScene as BranchScene) : null
   const isFinished = currentScene.nextSceneId === null && currentScene.type !== "choice"
 
   return (
-    <div className="relative mx-auto flex aspect-[9/16] w-full max-w-[430px] flex-col overflow-hidden rounded-2xl bg-black shadow-2xl shadow-cyan-500/10">
+    <div className="relative mx-auto flex aspect-[9/16] w-full max-w-[430px] flex-col overflow-hidden rounded-2xl bg-black shadow-2xl shadow-orange-400/15">
       <SceneRenderer
         scene={currentScene}
         isPlaying={isPlaying}
-        onSceneEnd={advanceScene}
+        onSceneEnd={handleAdvanceScene}
+        hotspots={visibleHotspots}
+        overlays={visibleOverlays}
+        activeOverlayId={activeOverlayId}
+        onHotspotClick={handleHotspotClick}
+        onOverlayDismiss={handleOverlayDismiss}
+        onOverlayCtaClick={handleOverlayCtaClick}
+        onTimeUpdate={handleTimeUpdate}
       />
 
       {isChoiceVisible && branchScene && (
@@ -41,7 +108,7 @@ export function VideoPlayer() {
         {!isPlaying && !isChoiceVisible && !isFinished && (
           <button
             onClick={play}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-500/90 text-white shadow-lg shadow-cyan-500/30 transition-all hover:bg-cyan-400 hover:scale-105"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FF6347]/90 text-white shadow-lg shadow-[#FF6347]/30 transition-all hover:bg-[#FF6347] hover:scale-105"
             aria-label="Play"
           >
             <PlayIcon />
@@ -88,7 +155,7 @@ export function VideoPlayer() {
           {choices.map((_, i) => (
             <div
               key={i}
-              className="h-2 w-2 rounded-full bg-cyan-400"
+              className="h-2 w-2 rounded-full bg-[#FFD700]"
             />
           ))}
           {Array.from({ length: 1 - choices.length }).map((_, i) => (

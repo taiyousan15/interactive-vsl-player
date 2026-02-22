@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050510;
-  --foreground: #e0e8ff;
+  --background: #87CEEB;
+  --foreground: #333333;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-noto-sans-jp);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto-sans-jp), "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
 }
 
 @keyframes fade-in {
@@ -120,37 +120,102 @@ body {
   animation: ken-burns 30s ease-in-out alternate infinite;
 }
 
-/* Telop semi-transparent background */
-.telop-bg {
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  max-width: 90%;
+/* ==========================================
+   テロップスタイル - 赤/青帯 + 白文字 + 黒アウトライン
+   参考画像準拠のデザイン
+   ========================================== */
+
+/* テロップ外枠（中央配置コンテナ） */
+.telop-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
-/* Telop text styling */
+/* テロップ帯（赤 = デフォルト） */
+.telop-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.telop-bar--red {
+  background: #CC0000;
+}
+
+.telop-bar--blue {
+  background: #2255CC;
+}
+
+.telop-bar--gold {
+  background: #CC8800;
+}
+
+/* テロップ文字 - 白文字 + 太い黒アウトライン */
 .telop-text {
-  font-weight: 800;
+  font-weight: 900;
+  color: #ffffff;
   text-align: center;
-  line-height: 1.5;
-  letter-spacing: 0.02em;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  font-size: 1.25rem;
   word-break: keep-all;
   overflow-wrap: anywhere;
   line-break: strict;
+  /* 太い黒アウトライン - 多方向text-shadow */
+  text-shadow:
+    -3px -3px 0 #000,
+     3px -3px 0 #000,
+    -3px  3px 0 #000,
+     3px  3px 0 #000,
+     0   -3px 0 #000,
+     0    3px 0 #000,
+    -3px  0   0 #000,
+     3px  0   0 #000,
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000;
+  -webkit-text-stroke: 1.5px #000;
+  paint-order: stroke fill;
 }
 
+/* 強調テキスト（赤文字） */
 .telop-emphasis {
-  color: #FFD700;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+  color: #FF3333;
+  text-shadow:
+    -3px -3px 0 #000,
+     3px -3px 0 #000,
+    -3px  3px 0 #000,
+     3px  3px 0 #000,
+     0   -3px 0 #000,
+     0    3px 0 #000,
+    -3px  0   0 #000,
+     3px  0   0 #000,
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000;
+  -webkit-text-stroke: 1.5px #000;
+  paint-order: stroke fill;
 }
 
+/* レガシー互換 */
+.telop-bg {
+  display: none;
+}
+
+/* テロップアニメーション */
 @keyframes telop-in {
   0% {
     opacity: 0;
-    transform: scale(0.9) translateY(10px);
+    transform: scale(0.92) translateY(8px);
   }
   100% {
     opacity: 1;
@@ -165,14 +230,54 @@ body {
   }
   100% {
     opacity: 0;
-    transform: scale(1.05) translateY(-10px);
+    transform: scale(1.03) translateY(-6px);
   }
 }
 
 .animate-telop-in {
-  animation: telop-in 0.4s ease-out forwards;
+  animation: telop-in 0.35s ease-out forwards;
 }
 
 .animate-telop-out {
-  animation: telop-out 0.3s ease-in forwards;
+  animation: telop-out 0.25s ease-in forwards;
+}
+
+/* クレイテクスチャオーバーレイ */
+.clay-texture-overlay {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+/* ホットスポット パルスアニメーション */
+@keyframes hotspot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 215, 0, 0);
+  }
+}
+
+.animate-hotspot-pulse {
+  animation: hotspot-pulse 2s ease-in-out infinite;
+}
+
+/* モバイルレスポンシブ */
+@media (max-width: 430px) {
+  .telop-text {
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+  }
+
+  .telop-bar {
+    padding: 6px 14px;
+  }
+}
+
+@media (min-width: 431px) {
+  .telop-text {
+    font-size: 1.4rem;
+  }
 }
